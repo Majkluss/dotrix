@@ -25,6 +25,8 @@ pub struct Material {
     pub ao_texture: Id<Texture>,
     /// Id of a normal map asset
     pub normal_texture: Id<Texture>,
+    /// Id of a heightmap map asset
+    pub heightmap: Id<Texture>,
     /// Pipeline buffer
     pub uniform: Buffer,
 }
@@ -41,6 +43,7 @@ impl Default for Material {
             ao: 1.0,
             ao_texture: Id::default(),
             normal_texture: Id::default(),
+            heightmap: Id::default(),
             uniform: Buffer::uniform("Material Buffer"),
         }
     }
@@ -67,48 +70,45 @@ impl Material {
         if self.normal_texture.is_null() {
             self.normal_texture = dummy_id;
         }
+        if self.heightmap.is_null() {
+            self.heightmap = dummy_id;
+        }
 
-        if let Some(texture) = assets.get_mut(self.texture) {
-            texture.load(renderer);
-        } else {
-            return false;
-        }
-        if let Some(texture) = assets.get_mut(self.roughness_texture) {
-            texture.load(renderer);
-        } else {
-            return false;
-        }
-        if let Some(texture) = assets.get_mut(self.metallic_texture) {
-            texture.load(renderer);
-        } else {
-            return false;
-        }
-        if let Some(texture) = assets.get_mut(self.ao_texture) {
-            texture.load(renderer);
-        } else {
-            return false;
-        }
-        if let Some(texture) = assets.get_mut(self.normal_texture) {
-            texture.load(renderer);
-        } else {
-            return false;
+        let textures = [
+            self.texture,
+            self.roughness_texture,
+            self.metallic_texture,
+            self.ao_texture,
+            self.normal_texture,
+            self.heightmap,
+        ];
+
+        for texture_id in textures {
+            if let Some(texture) = assets.get_mut(texture_id) {
+                texture.load(renderer);
+            } else {
+                return false;
+            }
         }
 
         let mut has_texture: u32 = 0;
         if self.texture != dummy_id {
-            has_texture |= 0b00001;
+            has_texture |= 0b000001;
         }
         if self.roughness_texture != dummy_id {
-            has_texture |= 0b00010;
+            has_texture |= 0b000010;
         }
         if self.metallic_texture != dummy_id {
-            has_texture |= 0b00100;
+            has_texture |= 0b000100;
         }
         if self.ao_texture != dummy_id {
-            has_texture |= 0b01000;
+            has_texture |= 0b001000;
         }
         if self.normal_texture != dummy_id {
-            has_texture |= 0b10000;
+            has_texture |= 0b010000;
+        }
+        if self.heightmap != dummy_id {
+            has_texture |= 0b100000;
         }
 
         let uniform = Uniform {

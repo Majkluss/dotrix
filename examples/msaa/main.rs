@@ -26,14 +26,14 @@ fn startup(mut camera: Mut<Camera>, mut world: Mut<World>, mut assets: Mut<Asset
     // import material textures
     assets.import("assets/space-crate/space-crate1-albedo.png");
     assets.import("assets/space-crate/space-crate1-ao.png");
-    // assets.import("assets/space-crate/space-crate1-height.png");
+    assets.import("assets/space-crate/space-crate1-height.png");
     assets.import("assets/space-crate/space-crate1-metallic.png");
     assets.import("assets/space-crate/space-crate1-normal-ogl.png");
     assets.import("assets/space-crate/space-crate1-roughness.png");
 
     let albedo = assets.register::<Texture>("space-crate1-albedo");
     let ao = assets.register::<Texture>("space-crate1-ao");
-    // let height = assets.register("space-crate1-height");
+    let heightmap = assets.register::<Texture>("space-crate1-height");
     let metallic = assets.register::<Texture>("space-crate1-metallic");
     let normal_ogl = assets.register::<Texture>("space-crate1-normal-ogl");
     let roughness = assets.register::<Texture>("space-crate1-roughness");
@@ -61,6 +61,7 @@ fn startup(mut camera: Mut<Camera>, mut world: Mut<World>, mut assets: Mut<Asset
             metallic_texture: metallic,
             normal_texture: normal_ogl,
             ao_texture: ao,
+            heightmap,
             ..Default::default()
         },
         Transform::default(),

@@ -139,6 +139,9 @@ var r_ao_texture: texture_2d<f32>;
 [[group(1), binding(6)]]
 var r_normal_texture: texture_2d<f32>;
 
+[[group(1), binding(7)]]
+var r_heightmap: texture_2d<f32>;
+
 [[group(0), binding(1)]]
 var r_sampler: sampler;
 

@@ -137,6 +137,7 @@ pub fn render(
                 let metallic_texture = assets.get(material.metallic_texture).unwrap();
                 let ao_texture = assets.get(material.ao_texture).unwrap();
                 let normal_texture = assets.get(material.normal_texture).unwrap();
+                let heightmap = assets.get(material.heightmap).unwrap();
 
                 let proj_view = globals
                     .get::<ProjView>()
@@ -194,6 +195,11 @@ pub fn render(
                                         "NormalTexture",
                                         Stage::Fragment,
                                         &normal_texture.buffer,
+                                    ),
+                                    Binding::Texture(
+                                        "HeightMap",
+                                        Stage::Fragment,
+                                        &heightmap.buffer,
                                     ),
                                 ],
                             ),

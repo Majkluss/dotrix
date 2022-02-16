@@ -82,6 +82,9 @@ var r_ao_texture: texture_2d<f32>;
 [[group(1), binding(6)]]
 var r_normal_texture: texture_2d<f32>;
 
+[[group(1), binding(7)]]
+var r_heightmap: texture_2d<f32>;
+
 [[group(0), binding(1)]]
 var r_sampler: sampler;
 
@@ -91,6 +94,13 @@ fn average(input: vec4<f32>) -> f32 {
   return (input.x + input.y + input.z + input.w) / 4.;
 }
 
+fn parallax_mapping(tex_uv: vec2<f32>, view_dir: vec3<f32>) -> vec2<f32> {
+    let height: f32 = textureSample(r_heightmap, r_sampler, tex_uv).r;
+    let height_scale: f32 = 0.005;
+    let p = view_dir.xy / view_dir.z * (height * height_scale);
+    return tex_uv - p;
+} 
+
 [[stage(fragment)]]
 fn fs_main(in: VertexOutput) -> [[location(0)]] vec4<f32> {
   var albedo: vec4<f32>;
@@ -98,8 +108,39 @@ fn fs_main(in: VertexOutput) -> [[location(0)]] vec4<f32> {
   var metallic: f32;
   var ao: f32;
 
+  var tex_uv = in.tex_uv;
+
+  // BEGIN MOVE TO VS:
+    let TBN = transpose(mat3x3<f32>(in.tangent, in.bitangent, in.normal));
+
+    let camera_position: vec3<f32> = u_light.camera_position.xyz;
+    var light_color: vec3<f32> = vec3<f32>(0.);
+
+    // vs_out.TangentLightPos = TBN * u_light.camera_position.xyz;
+    let tangentViewPos  = TBN * camera_position;
+    let tangentFragPos  = TBN * in.world_position;
+  // END MOVE
+
+  if ((u_material.has_texture & 32u) == 32u) {
+      let view_dir = normalize(tangentViewPos - tangentFragPos);
+      tex_uv = parallax_mapping(tex_uv, view_dir);
+  }
+
+  if(tex_uv.x > 1.0) {
+    tex_uv.x = 1.0;
+  }
+  if(tex_uv.y > 1.0) {
+    tex_uv.y = 1.0;
+  }
+  if(tex_uv.x < 0.0) {
+    tex_uv.x = 0.0;
+  }
+  if(tex_uv.y < 0.0) {
+    tex_uv.y = 0.0;
+  }
+
   if ((u_material.has_texture & 1u) == 1u) {
-      albedo = textureSample(r_texture, r_sampler, in.tex_uv);
+      albedo = textureSample(r_texture, r_sampler, tex_uv);
       // Covert from sRGB to linear color space
       // (PBR based renderer expect linear)
       albedo = vec4<f32>(pow(albedo.rgb, vec3<f32>(2.2)), albedo.a);
@@ -125,10 +166,11 @@ fn fs_main(in: VertexOutput) -> [[location(0)]] vec4<f32> {
       ao = u_material.ao;
   }
 
+
   var normal: vec3<f32>;
   if ((u_material.has_texture & 16u) == 16u) {
     let t_b_n = mat3x3<f32>(in.tangent.xyz, in.bitangent.xyz, in.normal);
-    normal = textureSample(r_normal_texture, r_sampler, in.tex_uv).xyz;
+    normal = textureSample(r_normal_texture, r_sampler, tex_uv).xyz;
     normal = normal * 2.0 - 1.0;
     normal = normalize(t_b_n * normal);
   } else {
